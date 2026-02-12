@@ -1,0 +1,78 @@
+{
+  "kind": "spec_vs_diff_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-12T14:00:51.325Z",
+  "summary": "The diff implements several frontend admin-route fixes (guard/redirect/access-denied UI) and adds a frontend testing scaffold (Vitest/RTL files and docs). However, there is no evidence of backend automated tests, build/CI test gating, robust admin-token persistence integrated into the actor/auth flow, or the full persistent on-chain commerce CRUD/order logic being completed per the requested end-to-end acceptance criteria.",
+  "missing_requirements": [
+    {
+      "id": "REQ-2",
+      "requirement": "Persist `caffeineAdminToken` from the URL into browser storage and reuse it across reloads, and show a clear UI state when the token is missing/invalid; ensure admin authorization checks behave consistently across reloads between `/admin` and `/admin/login`.",
+      "reason": "While a new URL/storage helper (`getPersistedUrlParameter`, `storeParameter`, `getStoredParameter`) and an `AdminAccessNotInitialized` UI component were added, the diff summary does not show changes to the actor initialization hook mentioned in the requirement (`frontend/src/hooks/useActor.ts`) or any wiring that actually reads/stores/uses `caffeineAdminToken` for admin authorization across reloads.",
+      "evidence": [
+        "frontend/src/utils/urlParams.ts",
+        "frontend/src/admin/components/AdminAccessNotInitialized.tsx"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "requirement": "Ensure a complete, persistent end-to-end commerce flow on-chain (admin product/offer CRUD; customer browse/cart/checkout/order placement; admin order viewing/status updates) and remove any trapping/dummy backend behavior that blocks required flows.",
+      "reason": "The diff shows only partial backend changes (e.g., adding `seedDemoContent()` and adding a migration wrapper). There is no evidence in the provided backend diff snippet of implementing/ensuring the required persistent CRUD and order placement/retrieval/status update methods, nor evidence that any previous intentional traps in required flows were removed.",
+      "evidence": [
+        "backend/main.mo",
+        "backend/migration.mo"
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "requirement": "Add automated backend tests for the Motoko canister covering critical authorization and business logic paths, runnable locally and in CI/build, failing the build on assertion failures.",
+      "reason": "No backend test files, test runner configuration, or package scripts for running Motoko tests are shown in the diff summary.",
+      "evidence": [
+        "backend/main.mo",
+        "backend/migration.mo"
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "requirement": "Wire automated testing into the build/release pipeline so deployments are blocked if tests do not pass; provide a single documented command to run all tests.",
+      "reason": "The diff summary does not show any changes to root/package scripts, CI configuration, or build commands that would enforce running both frontend and backend tests as a gating step.",
+      "evidence": [
+        "frontend/README.testing.md"
+      ]
+    }
+  ],
+  "hallucinated_features": [
+    {
+      "description": "Added demo data seeding logic in the backend (`seedDemoContent`) for products/offers.",
+      "reason": "The BuildRequest did not ask for demo/seed content; it asked for real persistent end-to-end commerce behavior and removal of dummy/trapping flows. Seeding may be helpful for UX but is not a specified requirement.",
+      "evidence": [
+        "backend/main.mo"
+      ]
+    },
+    {
+      "description": "Introduced generalized URL parameter utilities supporting hash-based routing and dual storage (sessionStorage + localStorage).",
+      "reason": "REQ-2 specifically requested persisting `caffeineAdminToken`; the added utilities go beyond that scope (hash-based parsing and generalized storage helpers), which were not explicitly requested.",
+      "evidence": [
+        "frontend/src/utils/urlParams.ts"
+      ]
+    }
+  ],
+  "confidence": 0.62,
+  "changed_files": [
+    "backend/main.mo",
+    "backend/migration.mo",
+    "frontend-file-summaries.txt",
+    "frontend/README.testing.md",
+    "frontend/src/App.tsx",
+    "frontend/src/admin/components/AdminAccessNotInitialized.tsx",
+    "frontend/src/admin/components/AdminGuard.tsx",
+    "frontend/src/admin/pages/AdminLoginPage.tsx",
+    "frontend/src/test/adminAccessFlow.test.tsx",
+    "frontend/src/test/customerHappyPath.test.tsx",
+    "frontend/src/test/mocks/actorMocks.ts",
+    "frontend/src/test/renderWithProviders.tsx",
+    "frontend/src/test/setupTests.ts",
+    "frontend/src/utils/urlParams.ts",
+    "frontend/vitest.config.ts",
+    "project_state.json"
+  ]
+}

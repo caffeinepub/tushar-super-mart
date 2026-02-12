@@ -1,0 +1,127 @@
+{
+  "kind": "coverage_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-12T14:00:51.328Z",
+  "sources": {
+    "buildRequest": true,
+    "implementationPlan": true
+  },
+  "requirements": {
+    "total": 6,
+    "implemented": 4,
+    "items": [
+      {
+        "id": "REQ-1",
+        "summary": "Diagnose and fix the production issue where accessing the admin portal at the `/admin` route is not working, ensuring a user can reliably reach the Admin Login page when unauthenticated and the Admin dashboard when authenticated and authorized.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/admin/components/AdminGuard.tsx",
+          "frontend/src/admin/pages/AdminLoginPage.tsx",
+          "frontend/src/App.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/admin/components/AdminGuard.tsx",
+          "frontend/src/admin/pages/AdminLoginPage.tsx",
+          "frontend/src/App.tsx"
+        ]
+      },
+      {
+        "id": "REQ-2",
+        "summary": "Make admin authorization and access-control initialization robust so the admin portal works in production without relying on a one-time URL parameter: persist the `caffeineAdminToken` (currently read via `getSecretParameter('caffeineAdminToken')` in `frontend/src/hooks/useActor.ts`) in browser storage and reuse it across reloads, and provide a clear UI state when the token is missing/invalid.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/utils/urlParams.ts",
+          "frontend/src/hooks/useActor.ts",
+          "frontend/src/admin/components/AdminGuard.tsx",
+          "frontend/src/admin/pages/AdminLoginPage.tsx",
+          "frontend/src/admin/components/AdminAccessNotInitialized.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/utils/urlParams.ts",
+          "frontend/src/admin/components/AdminGuard.tsx",
+          "frontend/src/admin/pages/AdminLoginPage.tsx",
+          "frontend/src/admin/components/AdminAccessNotInitialized.tsx"
+        ]
+      },
+      {
+        "id": "REQ-3",
+        "summary": "Remove any remaining “dummy/non-functional” behavior by ensuring the application supports a complete, persistent end-to-end commerce flow on-chain: products can be created/updated/deleted by admins; customers can browse products, add to cart, checkout, and place orders; admins can view orders and update order statuses; and these operations persist correctly within the canister state.",
+        "status": "missing",
+        "plannedFiles": [
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/admin/pages/ProductsManagementPage.tsx",
+          "frontend/src/admin/pages/OffersManagementPage.tsx",
+          "frontend/src/customer/pages/CheckoutPage.tsx",
+          "frontend/src/customer/pages/ProductListPage.tsx"
+        ],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-4",
+        "summary": "Add automated backend tests for the Motoko canister covering critical authorization and business logic paths (admin-only methods reject non-admins; order placement validates input; order retrieval permissions; product/offer CRUD behavior).",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-5",
+        "summary": "Add automated frontend tests covering the admin access flow and key customer flow: `/admin` redirect behavior, login screen rendering, access denied behavior for non-admin, and a basic customer shop-to-cart-to-checkout happy path (mocking the actor layer).",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/vitest.config.ts",
+          "frontend/src/test/setupTests.ts",
+          "frontend/src/test/renderWithProviders.tsx",
+          "frontend/src/test/mocks/actorMocks.ts",
+          "frontend/src/test/adminAccessFlow.test.tsx",
+          "frontend/src/test/customerHappyPath.test.tsx",
+          "frontend/src/App.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/vitest.config.ts",
+          "frontend/src/test/setupTests.ts",
+          "frontend/src/test/renderWithProviders.tsx",
+          "frontend/src/test/mocks/actorMocks.ts",
+          "frontend/src/test/adminAccessFlow.test.tsx",
+          "frontend/src/test/customerHappyPath.test.tsx",
+          "frontend/src/App.tsx"
+        ]
+      },
+      {
+        "id": "REQ-6",
+        "summary": "Wire automated testing into the build/release pipeline so deployments are blocked if tests do not pass (run both frontend and backend test suites as part of build).",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/package.json",
+          "frontend/README.testing.md"
+        ],
+        "matchedFiles": [
+          "frontend/README.testing.md"
+        ]
+      }
+    ]
+  },
+  "changedFiles": [
+    "backend/main.mo",
+    "backend/migration.mo",
+    "build-request.json",
+    "feature_evidence.json",
+    "frontend-file-summaries.txt",
+    "frontend-implementation-plan.json",
+    "frontend/README.testing.md",
+    "frontend/src/App.tsx",
+    "frontend/src/admin/components/AdminAccessNotInitialized.tsx",
+    "frontend/src/admin/components/AdminGuard.tsx",
+    "frontend/src/admin/pages/AdminLoginPage.tsx",
+    "frontend/src/test/adminAccessFlow.test.tsx",
+    "frontend/src/test/customerHappyPath.test.tsx",
+    "frontend/src/test/mocks/actorMocks.ts",
+    "frontend/src/test/renderWithProviders.tsx",
+    "frontend/src/test/setupTests.ts",
+    "frontend/src/utils/urlParams.ts",
+    "frontend/vitest.config.ts",
+    "project_state.json",
+    "scratch/component-selection.json",
+    "spec.md",
+    "spec_vs_diff_report.json"
+  ]
+}

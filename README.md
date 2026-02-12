@@ -1,2 +1,3 @@
-# tushar-super-mart
-Exported from Caffeine project: Fix broken admin access and add automated testing for a full end-to-end working app
+## 
+
+To run app build and run docker image: `docker build -t app . docker run -it --network host app`

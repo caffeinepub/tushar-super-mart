@@ -1,0 +1,79 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 3,
+  "summary": "Project to build and deploy a fully functional (non-dummy) application with automated testing included in the build/release process.",
+  "architectural_notes": [
+    "Include automated tests (e.g., unit/integration/e2e) as a required gate in the build/release pipeline."
+  ],
+  "known_issues": [
+    "Admin access (/admin) reported as not working in production deployment."
+  ],
+  "isFixRequest": true,
+  "existing_features": [
+    {
+      "id": "feature-diagnose-and-fix-the-production-issue-where-accessing-the-admin-portal-at-the-admin-route-is-not-working-ensuring-a-user-can-reliably-reach-the-admin-login-page-when-unauthenticated-and-the-admin-dashboard-when-authenticated-and-authorized",
+      "title": "Diagnose and fix the production issue where accessing the admin portal at the `/admin` route is not working, ensuring a user can reliably reach the Admin Login page when unauthenticated and the Admin dashboard when authenticated and authorized.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-make-admin-authorization-and-access-control-initialization-robust-so-the-admin-portal-works-in-production-without-relying-on-a-one-time-url-parameter-persist-the-caffeineadmintoken-currently-read-via-getsecretparameter-caffeineadmintoken-in-frontend-src-hooks-useactor-ts-in-browser-storage-and-reuse-it-across-reloads-and-provide-a-clear-ui-state-when-the-token-is-missing-invalid",
+      "title": "Make admin authorization and access-control initialization robust so the admin portal works in production without relying on a one-time URL parameter: persist the `caffeineAdminToken` (currently read via `getSecretParameter('caffeineAdminToken')` in `frontend/src/hooks/useActor.ts`) in browser storage and reuse it across reloads, and provide a clear UI state when the token is missing/invalid.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-automated-frontend-tests-covering-the-admin-access-flow-and-key-customer-flow-admin-redirect-behavior-login-screen-rendering-access-denied-behavior-for-non-admin-and-a-basic-customer-shop-to-cart-to-checkout-happy-path-mocking-the-actor-layer",
+      "title": "Add automated frontend tests covering the admin access flow and key customer flow: `/admin` redirect behavior, login screen rendering, access denied behavior for non-admin, and a basic customer shop-to-cart-to-checkout happy path (mocking the actor layer).",
+      "reqIds": [
+        "REQ-5"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-wire-automated-testing-into-the-build-release-pipeline-so-deployments-are-blocked-if-tests-do-not-pass-run-both-frontend-and-backend-test-suites-as-part-of-build",
+      "title": "Wire automated testing into the build/release pipeline so deployments are blocked if tests do not pass (run both frontend and backend test suites as part of build).",
+      "reqIds": [
+        "REQ-6"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Add automated testing to the build/deployment pipeline",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Replace dummy functionality with a full-fledged working application model (complete end-to-end features)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Remove any remaining “dummy/non-functional” behavior by ensuring the application supports a complete, persistent end-to-end commerce flow on-chain: products can be created/updated/deleted by admins; customers can browse products, add to cart, checkout, and place orders; admins can view orders and update order statuses; and these operations persist correctly within the canister state.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-6",
+      "summary": "Add automated backend tests for the Motoko canister covering critical authorization and business logic paths (admin-only methods reject non-admins; order placement validates input; order retrieval permissions; product/offer CRUD behavior).",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "status": "pending"
+    }
+  ],
+  "projectName": "Fix broken admin access and add automated testing for a full end-to-end working app",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}
