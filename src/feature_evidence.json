@@ -2,12 +2,12 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-diagnose-and-fix-the-production-issue-where-accessing-the-admin-portal-at-the-admin-route-is-not-working-ensuring-a-user-can-reliably-reach-the-admin-login-page-when-unauthenticated-and-the-admin-dashboard-when-authenticated-and-authorized",
-      "featureTitle": "Diagnose and fix the production issue where accessing the admin portal at the `/admin` route is not working, ensuring a user can reliably reach the Admin Login page when unauthenticated and the Admin dashboard when authenticated and authorized.",
+      "featureId": "feature-disable-the-admin-route-authentication-gate-so-users-can-access-the-admin-portal-without-logging-in-via-internet-identity-no-redirect-to-admin-login-and-no-admin-status-check-while-this-temporary-mode-is-enabled",
+      "featureTitle": "Disable the admin-route authentication gate so users can access the admin portal without logging in via Internet Identity (no redirect to `/admin/login` and no admin-status check) while this temporary mode is enabled.",
       "files": [
-        "frontend/src/App.tsx",
+        "frontend/src/admin/adminNoAuth.ts",
         "frontend/src/admin/components/AdminGuard.tsx",
-        "frontend/src/admin/pages/AdminLoginPage.tsx"
+        "frontend/src/hooks/useQueries.ts"
       ],
       "components": [
         "authorization@4.0.0",
@@ -24,13 +24,10 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-make-admin-authorization-and-access-control-initialization-robust-so-the-admin-portal-works-in-production-without-relying-on-a-one-time-url-parameter-persist-the-caffeineadmintoken-currently-read-via-getsecretparameter-caffeineadmintoken-in-frontend-src-hooks-useactor-ts-in-browser-storage-and-reuse-it-across-reloads-and-provide-a-clear-ui-state-when-the-token-is-missing-invalid",
-      "featureTitle": "Make admin authorization and access-control initialization robust so the admin portal works in production without relying on a one-time URL parameter: persist the `caffeineAdminToken` (currently read via `getSecretParameter('caffeineAdminToken')` in `frontend/src/hooks/useActor.ts`) in browser storage and reuse it across reloads, and provide a clear UI state when the token is missing/invalid.",
+      "featureId": "feature-update-the-admin-login-page-behavior-for-the-temporary-no-auth-mode-so-it-does-not-prompt-for-internet-identity-login-instead-it-should-provide-a-simple-message-that-admin-authentication-is-currently-disabled-and-a-button-link-to-enter-the-admin-portal",
+      "featureTitle": "Update the admin login page behavior for the temporary no-auth mode so it does not prompt for Internet Identity login; instead it should provide a simple message that admin authentication is currently disabled and a button/link to enter the admin portal.",
       "files": [
-        "frontend/src/admin/components/AdminAccessNotInitialized.tsx",
-        "frontend/src/admin/components/AdminGuard.tsx",
-        "frontend/src/admin/pages/AdminLoginPage.tsx",
-        "frontend/src/utils/urlParams.ts"
+        "frontend/src/admin/pages/AdminLoginPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -43,52 +40,6 @@
       ],
       "testIds": [
         "REQ-2"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-add-automated-frontend-tests-covering-the-admin-access-flow-and-key-customer-flow-admin-redirect-behavior-login-screen-rendering-access-denied-behavior-for-non-admin-and-a-basic-customer-shop-to-cart-to-checkout-happy-path-mocking-the-actor-layer",
-      "featureTitle": "Add automated frontend tests covering the admin access flow and key customer flow: `/admin` redirect behavior, login screen rendering, access denied behavior for non-admin, and a basic customer shop-to-cart-to-checkout happy path (mocking the actor layer).",
-      "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/test/adminAccessFlow.test.tsx",
-        "frontend/src/test/customerHappyPath.test.tsx",
-        "frontend/src/test/mocks/actorMocks.ts",
-        "frontend/src/test/renderWithProviders.tsx",
-        "frontend/src/test/setupTests.ts",
-        "frontend/vitest.config.ts"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-5"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-wire-automated-testing-into-the-build-release-pipeline-so-deployments-are-blocked-if-tests-do-not-pass-run-both-frontend-and-backend-test-suites-as-part-of-build",
-      "featureTitle": "Wire automated testing into the build/release pipeline so deployments are blocked if tests do not pass (run both frontend and backend test suites as part of build).",
-      "files": [
-        "frontend/README.testing.md"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-6"
       ],
       "confidence": "high"
     }

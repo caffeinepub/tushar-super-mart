@@ -1,141 +1,75 @@
 {
   "kind": "build_request",
-  "title": "Fix broken admin access and add automated testing for a full end-to-end working app",
+  "title": "Temporarily disable admin authentication and admin permission checks",
   "priority": "high",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Diagnose and fix the production issue where accessing the admin portal at the `/admin` route is not working, ensuring a user can reliably reach the Admin Login page when unauthenticated and the Admin dashboard when authenticated and authorized.",
+      "text": "Disable the admin-route authentication gate so users can access the admin portal without logging in via Internet Identity (no redirect to `/admin/login` and no admin-status check) while this temporary mode is enabled.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-user-1"
         ],
         "quotes": [
-          "it is not working add testing to build and give me full fklledge working model not dummy app"
+          "remove authemtication for now from amdin",
+          "build it now now"
         ]
       },
       "acceptanceCriteria": [
-        "Visiting `/admin` while logged out redirects to `/admin/login` and renders the Admin Login UI (no blank screen).",
-        "After a successful Internet Identity login, authorized admins are routed to the admin dashboard (`/admin`) and can navigate to admin sections (orders/products/customers/offers/notifications).",
-        "Unauthorized users (non-admin) see an explicit Access Denied UI and are redirected to `/shop` (or can navigate back) without runtime errors.",
-        "All admin-route transitions work on hard refresh (directly opening `/admin/*` URLs) in production."
+        "Navigating to `/admin` in a fresh browser session (no Internet Identity login) renders the Admin portal layout and dashboard pages instead of redirecting to `/admin/login`.",
+        "Admin routes under `/admin/*` remain reachable without an identity present (e.g., `/admin/products`, `/admin/offers`, `/admin/customers`, `/admin/notifications`).",
+        "No UI state is blocked by AdminGuard loading/redirect states when identity is absent."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Make admin authorization and access-control initialization robust so the admin portal works in production without relying on a one-time URL parameter: persist the `caffeineAdminToken` (currently read via `getSecretParameter('caffeineAdminToken')` in `frontend/src/hooks/useActor.ts`) in browser storage and reuse it across reloads, and provide a clear UI state when the token is missing/invalid.",
-      "target": "both",
+      "text": "Update the admin login page behavior for the temporary no-auth mode so it does not prompt for Internet Identity login; instead it should provide a simple message that admin authentication is currently disabled and a button/link to enter the admin portal.",
+      "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-user-1"
         ],
         "quotes": [
-          "how to accesa dmin",
-          "it is not working add testing to build and give me full fklledge working model not dummy app"
+          "remove authemtication for now from amdin"
         ]
       },
       "acceptanceCriteria": [
-        "If `caffeineAdminToken` is present in the URL once, the app stores it (e.g., sessionStorage/localStorage) and future admin visits do not require the token to remain in the URL.",
-        "If the token is missing or invalid, the admin flow shows a clear message explaining that admin access is not initialized and what is required to proceed (no silent failure).",
-        "Admin authorization checks (e.g., `useIsCallerAdmin` / `actor.isCallerAdmin()`) behave consistently across page reloads and between `/admin` and `/admin/login`."
+        "Visiting `/admin/login` does not require Internet Identity login in the temporary no-auth mode.",
+        "The page displays clear English text indicating admin authentication is temporarily disabled and provides a working action to navigate to `/admin`."
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Remove any remaining “dummy/non-functional” behavior by ensuring the application supports a complete, persistent end-to-end commerce flow on-chain: products can be created/updated/deleted by admins; customers can browse products, add to cart, checkout, and place orders; admins can view orders and update order statuses; and these operations persist correctly within the canister state.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "give me full fklledge working model not dummy app"
-        ]
-      },
-      "acceptanceCriteria": [
-        "A fresh deployment allows admins to create products and offers via the admin UI and customers can see those changes in the shop UI without manual backend intervention.",
-        "Customer checkout successfully creates an order; the order appears in the admin orders dashboard; admins can change status; the updated status persists and is reflected when refetching.",
-        "No required user-facing flow depends on calling a backend method that intentionally traps (e.g., avoid any app dependency on the current `init()` that traps in `backend/main.mo`)."
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "text": "Add automated backend tests for the Motoko canister covering critical authorization and business logic paths (admin-only methods reject non-admins; order placement validates input; order retrieval permissions; product/offer CRUD behavior).",
+      "text": "Temporarily disable backend admin permission enforcement for all admin-only endpoints so that admin UI operations (orders dashboard, order status updates, products CRUD, offers CRUD, customers list/detail) work without an authenticated admin principal while this temporary mode is enabled.",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-user-1"
         ],
         "quotes": [
-          "add testing to build"
+          "remove authemtication for now from amdin",
+          "build it now now"
         ]
       },
       "acceptanceCriteria": [
-        "A repeatable backend test suite exists and can be run locally and in CI/build (documented via package scripts).",
-        "Tests cover at least: admin permission enforcement for product/offer/order admin methods; placing an order with empty products fails; authorized admin can list all orders; non-admin cannot list all orders.",
-        "Tests fail the build when assertions fail."
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "text": "Add automated frontend tests covering the admin access flow and key customer flow: `/admin` redirect behavior, login screen rendering, access denied behavior for non-admin, and a basic customer shop-to-cart-to-checkout happy path (mocking the actor layer).",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "add testing to build"
-        ]
-      },
-      "acceptanceCriteria": [
-        "A repeatable frontend test suite exists (unit/component tests) and can be run locally and in CI/build (documented via package scripts).",
-        "Tests cover at least: navigating to `/admin` while logged out routes to `/admin/login`; access-denied UI shown when `isCallerAdmin=false`; customer can add an item to cart and proceed to checkout UI.",
-        "Tests fail the build when assertions fail."
-      ]
-    },
-    {
-      "id": "REQ-6",
-      "text": "Wire automated testing into the build/release pipeline so deployments are blocked if tests do not pass (run both frontend and backend test suites as part of build).",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "add testing to build"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Running the standard build command(s) for the project executes the test suites first (or as a required step) and stops on failure.",
-        "A single documented command (e.g., `npm test` / `npm run test:all`) runs all tests needed to gate a release.",
-        "If any test fails, the pipeline/build exits non-zero and no production release step is executed."
+        "Calls to existing admin-only backend methods (e.g., `getAllOrders`, `updateOrderStatus`, `createProduct`, `updateProduct`, `deleteProduct`, `getAllOffers`, `createOffer`, `updateOffer`, `activateOffer`, `deactivateOffer`, `deleteOffer`, `getAllCustomers`, `getCustomer`) succeed for an unauthenticated/anonymous caller while the temporary no-auth mode is enabled.",
+        "Customer-facing endpoints (e.g., browsing products, placing orders) continue to function as before.",
+        "No data migration is required for this change (state remains compatible)."
       ]
     }
   ],
   "constraints": [
-    "Respect the single-actor backend architecture; keep all Motoko logic in `backend/main.mo` and add `backend/migration.mo` only if a state upgrade is required.",
-    "Do not edit frontend files under `frontend/src/components/ui` or other `frontend.immutablePaths` from SYSTEM_CONTEXT; compose them instead.",
-    "Use English for all user-facing text."
+    "Backend must remain a single Motoko actor in `backend/main.mo` (no additional services).",
+    "Do not modify any frontend files under `frontend/src/components/ui` or the immutable hook/bootstrap paths listed in SYSTEM_CONTEXT."
   ],
   "nonGoals": [
-    "Adding third-party authentication providers beyond Internet Identity.",
-    "Adding external databases or non-Internet-Computer backend services.",
-    "Implementing real-time features (WebSockets/push notifications)."
+    "Implementing a permanent admin authentication redesign or role-management UI.",
+    "Adding the previously-mentioned customer profile section / unique ID flow (not requested in the latest instruction to build).",
+    "Adding third-party authentication providers beyond Internet Identity."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
-  },
-  "userProfileUpdate": {
-    "goalsToAdd": [],
-    "goalsToRemove": [],
-    "preferencesToAdd": [],
-    "preferencesToRemove": [],
-    "miscToAdd": [],
-    "miscToRemove": [],
-    "fieldsToSet": {},
-    "fieldsToDelete": []
   }
 }

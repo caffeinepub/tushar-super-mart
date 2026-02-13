@@ -1,171 +1,51 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix admin access reliability and add frontend test gating",
+  "title": "Temporary no-auth mode for admin portal (frontend)",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Fix broken /admin access so unauthenticated users reliably reach Admin Login and authenticated authorized admins reach the dashboard, including hard-refresh stability.",
+      "summary": "Bypass the AdminGuard authentication/admin-status checks so all /admin/* routes are reachable without Internet Identity while temporary no-auth mode is enabled.",
       "acceptanceCriteria": [
-        "Visiting `/admin` while logged out redirects to `/admin/login` and renders the Admin Login UI (no blank screen).",
-        "After a successful Internet Identity login, authorized admins are routed to the admin dashboard (`/admin`) and can navigate to admin sections (orders/products/customers/offers/notifications).",
-        "Unauthorized users (non-admin) see an explicit Access Denied UI and are redirected to `/shop` (or can navigate back) without runtime errors.",
-        "All admin-route transitions work on hard refresh (directly opening `/admin/*` URLs) in production."
+        "Navigating to `/admin` in a fresh browser session (no Internet Identity login) renders the Admin portal layout and dashboard pages instead of redirecting to `/admin/login`.",
+        "Admin routes under `/admin/*` remain reachable without an identity present (e.g., `/admin/products`, `/admin/offers`, `/admin/customers`, `/admin/notifications`).",
+        "No UI state is blocked by AdminGuard loading/redirect states when identity is absent."
       ],
       "file_operations": [
         {
+          "path": "frontend/src/admin/adminNoAuth.ts",
+          "operation": "create",
+          "description": "Add a single source of truth for the temporary no-auth mode flag (e.g., derived from a Vite environment variable) so admin auth gating can be toggled without invasive changes."
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Update the admin-check query helper (useIsCallerAdmin) to support being disabled in temporary no-auth mode (e.g., optional parameter to turn off fetching) so AdminGuard doesn’t enter loading/redirect states when identity is absent."
+        },
+        {
           "path": "frontend/src/admin/components/AdminGuard.tsx",
           "operation": "modify",
-          "description": "Eliminate blank-screen states by rendering an explicit redirect/loading UI when unauthenticated, and ensure redirects to `/admin/login` happen via render-safe navigation (not returning null while redirecting)."
-        },
-        {
-          "path": "frontend/src/admin/pages/AdminLoginPage.tsx",
-          "operation": "modify",
-          "description": "Harden login page routing logic so it deterministically shows login UI when logged out, routes admins to `/admin` after login, and shows an explicit Access Denied state with safe navigation options for non-admins."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Verify admin route tree wiring so `/admin`, `/admin/login`, and nested `/admin/*` routes consistently render the correct layouts/guards on direct navigation and hard refresh (no orphaned routes)."
+          "description": "When temporary no-auth mode is enabled, bypass identity checks, bypass admin-status checks, and render children immediately (no redirect to /admin/login and no loading/redirect UI). When disabled, preserve existing behavior."
         }
       ]
     },
     {
       "id": "REQ-2",
-      "summary": "Persist the caffeineAdminToken across reloads and provide clear UI states when admin initialization is missing/invalid so authorization behaves consistently.",
+      "summary": "Change /admin/login to a no-auth informational page with a direct link/button into /admin while temporary no-auth mode is enabled.",
       "acceptanceCriteria": [
-        "If `caffeineAdminToken` is present in the URL once, the app stores it (e.g., sessionStorage/localStorage) and future admin visits do not require the token to remain in the URL.",
-        "If the token is missing or invalid, the admin flow shows a clear message explaining that admin access is not initialized and what is required to proceed (no silent failure).",
-        "Admin authorization checks (e.g., `useIsCallerAdmin` / `actor.isCallerAdmin()`) behave consistently across page reloads and between `/admin` and `/admin/login`."
+        "Visiting `/admin/login` does not require Internet Identity login in the temporary no-auth mode.",
+        "The page displays clear English text indicating admin authentication is temporarily disabled and provides a working action to navigate to `/admin`."
       ],
       "file_operations": [
-        {
-          "path": "frontend/src/utils/urlParams.ts",
-          "operation": "modify",
-          "description": "Add robust persisted storage support for `caffeineAdminToken` (session + local storage), and support extracting it from URL querystring/hash query once, then reusing it across reloads while minimizing exposure in the address bar."
-        },
-        {
-          "path": "frontend/src/hooks/useActor.ts",
-          "operation": "modify",
-          "description": "Make admin access-control initialization resilient: load persisted `caffeineAdminToken`, avoid calling admin initialization with an empty token, capture initialization errors into a stable UI-consumable state, and keep actor creation stable across reloads."
-        },
-        {
-          "path": "frontend/src/admin/components/AdminGuard.tsx",
-          "operation": "modify",
-          "description": "Integrate an explicit UI state for missing/invalid admin token (e.g., “Admin access not initialized”), and ensure this state does not present as non-admin access-denied when initialization is the real cause."
-        },
         {
           "path": "frontend/src/admin/pages/AdminLoginPage.tsx",
           "operation": "modify",
-          "description": "Show a clear, English explanation when `caffeineAdminToken` is missing/invalid (including what the user must do to proceed), and ensure the login flow and admin-check flow remain consistent across reloads."
-        },
-        {
-          "path": "frontend/src/admin/components/AdminAccessNotInitialized.tsx",
-          "operation": "create",
-          "description": "Create a dedicated, reusable UI component for the “admin access not initialized / token missing or invalid” state, with clear next steps and navigation back to `/shop` (Use shadcn-ui Card/Button primitives by composition; verify the component's usage instructions before implementing.)"
-        }
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "summary": "Remove remaining dummy/non-functional UI behavior by ensuring the frontend uses real persistent commerce flows (products/offers CRUD, cart/checkout, orders admin updates) with correct refetch/error handling.",
-      "acceptanceCriteria": [
-        "A fresh deployment allows admins to create products and offers via the admin UI and customers can see those changes in the shop UI without manual backend intervention.",
-        "Customer checkout successfully creates an order; the order appears in the admin orders dashboard; admins can change status; the updated status persists and is reflected when refetching.",
-        "No required user-facing flow depends on calling a backend method that intentionally traps (e.g., avoid any app dependency on the current `init()` that traps in `backend/main.mo`)."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Audit and harden commerce queries/mutations to ensure proper invalidation/refetch across the shop and admin dashboards, and add consistent handling for authorization traps and business-logic errors surfaced to the UI."
-        },
-        {
-          "path": "frontend/src/admin/pages/ProductsManagementPage.tsx",
-          "operation": "modify",
-          "description": "Ensure product create/update/delete flows are fully functional with clear success/error UI, and that the UI never relies on placeholder data; verify product list refetching reflects changes after mutations."
-        },
-        {
-          "path": "frontend/src/admin/pages/OffersManagementPage.tsx",
-          "operation": "modify",
-          "description": "Ensure offers create/update/activate/deactivate/delete flows are fully functional with clear success/error UI, and that the UI never relies on placeholder data; verify list refetching reflects changes after mutations."
-        },
-        {
-          "path": "frontend/src/customer/pages/CheckoutPage.tsx",
-          "operation": "modify",
-          "description": "Strengthen checkout error handling and user messaging so any backend failures (including validation failures) produce clear UI feedback and do not leave the app in a broken state."
-        },
-        {
-          "path": "frontend/src/customer/pages/ProductListPage.tsx",
-          "operation": "modify",
-          "description": "Ensure product browsing reflects live canister state changes (including newly-created products) and provides consistent empty/loading/error states without any dummy placeholders."
-        }
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "summary": "Add automated frontend tests for admin access flow and a basic customer shop-to-cart-to-checkout happy path with actor-layer mocking.",
-      "acceptanceCriteria": [
-        "A repeatable frontend test suite exists (unit/component tests) and can be run locally and in CI/build (documented via package scripts).",
-        "Tests cover at least: navigating to `/admin` while logged out routes to `/admin/login`; access-denied UI shown when `isCallerAdmin=false`; customer can add an item to cart and proceed to checkout UI.",
-        "Tests fail the build when assertions fail."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/vitest.config.ts",
-          "operation": "create",
-          "description": "Add a Vitest configuration suitable for React component tests (jsdom, TS/JSX handling, and setup file wiring) to support a repeatable frontend test suite."
-        },
-        {
-          "path": "frontend/src/test/setupTests.ts",
-          "operation": "create",
-          "description": "Create global test setup (e.g., React Testing Library configuration, router/test environment shims, and cleanup) used by the frontend test runner."
-        },
-        {
-          "path": "frontend/src/test/renderWithProviders.tsx",
-          "operation": "create",
-          "description": "Add a small test utility to render routes/components with required providers (React Query, Internet Identity context mocking, and CartProvider) to support admin and customer flow tests."
-        },
-        {
-          "path": "frontend/src/test/mocks/actorMocks.ts",
-          "operation": "create",
-          "description": "Create reusable actor-layer mocks for admin checks, product listing, and order placement so tests can validate flows without talking to a real canister."
+          "description": "When temporary no-auth mode is enabled, replace the Internet Identity login prompt with a clear message that admin authentication is temporarily disabled and provide a button/link that navigates to /admin; ensure no admin-status check/loading state blocks the page in this mode."
         },
         {
           "path": "frontend/src/test/adminAccessFlow.test.tsx",
-          "operation": "create",
-          "description": "Implement tests covering: `/admin` while logged out redirects to `/admin/login` and renders login UI; authorized admin routes to `/admin`; non-admin sees Access Denied UI and can navigate back to `/shop`."
-        },
-        {
-          "path": "frontend/src/test/customerHappyPath.test.tsx",
-          "operation": "create",
-          "description": "Implement a basic shop-to-cart-to-checkout happy-path test: shop renders products from mocked queries, add-to-cart updates cart UI, and navigation to checkout renders the checkout form."
-        },
-        {
-          "path": "frontend/src/App.tsx",
           "operation": "modify",
-          "description": "Export test-friendly router construction (or a factory) so tests can instantiate the router with controlled initial locations without coupling to production globals."
-        }
-      ]
-    },
-    {
-      "id": "REQ-6",
-      "summary": "Gate builds on frontend tests and provide a single documented command to run required frontend tests for release readiness.",
-      "acceptanceCriteria": [
-        "Running the standard build command(s) for the project executes the test suites first (or as a required step) and stops on failure.",
-        "A single documented command (e.g., `npm test` / `npm run test:all`) runs all tests needed to gate a release.",
-        "If any test fails, the pipeline/build exits non-zero and no production release step is executed."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/package.json",
-          "operation": "create",
-          "description": "Add/standardize frontend npm scripts for `test`, `test:ci`, and a build-gating flow (e.g., `prebuild` running tests) so builds stop on failing tests."
-        },
-        {
-          "path": "frontend/README.testing.md",
-          "operation": "create",
-          "description": "Document how to run the frontend test suite locally and in CI (single command to gate release) and what flows are covered."
+          "description": "Add/adjust a minimal routing-level test to confirm that in temporary no-auth mode, /admin renders the admin layout without redirect and /admin/login shows the disabled-auth message with a working navigation action to /admin."
         }
       ]
     }

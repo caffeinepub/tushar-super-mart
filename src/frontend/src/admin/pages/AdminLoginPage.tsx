@@ -4,15 +4,22 @@ import { useInternetIdentity } from '../../hooks/useInternetIdentity';
 import { useIsCallerAdmin } from '../../hooks/useQueries';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Shield, Loader2, ShieldAlert } from 'lucide-react';
+import { Shield, Loader2, ShieldAlert, ShieldOff } from 'lucide-react';
+import { isAdminNoAuthEnabled } from '../adminNoAuth';
 
 export default function AdminLoginPage() {
+  const noAuthMode = isAdminNoAuthEnabled();
   const { login, identity, isLoggingIn, isLoginError } = useInternetIdentity();
   const navigate = useNavigate();
-  const { data: isAdmin, isLoading: isCheckingAdmin, isFetched } = useIsCallerAdmin();
+  
+  // Disable admin check query when in no-auth mode
+  const { data: isAdmin, isLoading: isCheckingAdmin, isFetched } = useIsCallerAdmin({
+    enabled: !noAuthMode,
+  });
   const [showAccessDenied, setShowAccessDenied] = useState(false);
 
   useEffect(() => {
+    if (noAuthMode) return;
     // If authenticated and admin, redirect to admin dashboard
     if (identity && isFetched && isAdmin === true) {
       navigate({ to: '/admin', replace: true });
@@ -26,7 +33,7 @@ export default function AdminLoginPage() {
       }, 3000);
       return () => clearTimeout(timer);
     }
-  }, [identity, isAdmin, isFetched, navigate]);
+  }, [identity, isAdmin, isFetched, navigate, noAuthMode]);
 
   const handleLogin = async () => {
     setShowAccessDenied(false);
@@ -36,6 +43,45 @@ export default function AdminLoginPage() {
       console.error('Login error:', error);
     }
   };
+
+  // In no-auth mode, show a different UI
+  if (noAuthMode) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-accent/20 to-background flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 rounded-full bg-warning/10 flex items-center justify-center">
+                <ShieldOff className="w-8 h-8 text-warning" />
+              </div>
+            </div>
+            <CardTitle className="text-3xl">Admin Portal</CardTitle>
+            <CardDescription>Authentication temporarily disabled</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="p-4 rounded-lg bg-warning/10 border border-warning/20">
+              <p className="text-sm text-center">
+                Admin authentication is currently disabled for testing purposes. You can access the
+                admin portal directly without logging in.
+              </p>
+            </div>
+
+            <Button
+              className="w-full text-lg py-6"
+              onClick={() => navigate({ to: '/admin' })}
+            >
+              <Shield className="w-5 h-5 mr-2" />
+              Enter Admin Portal
+            </Button>
+
+            <Button variant="outline" className="w-full" onClick={() => navigate({ to: '/' })}>
+              Back to Home
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   // Show access denied state
   if (showAccessDenied && identity) {

@@ -11,11 +11,8 @@ import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
 import MixinStorage "blob-storage/Mixin";
 import Storage "blob-storage/Storage";
-import Migration "migration";
 
-(with migration = Migration.run)
 actor {
-  // Initialize the access control system
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
   include MixinStorage();
@@ -190,9 +187,6 @@ actor {
 
   // Product Management - Admin Functions
   public shared ({ caller }) func createProduct(name : Text, description : Text, price : Nat, quantity : Nat, available : Bool, image : ?Storage.ExternalBlob) : async Text {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can create products");
-    };
     let id = "prod" # productCounter.toText();
     let newProduct : Product = {
       id;
@@ -209,9 +203,6 @@ actor {
   };
 
   public shared ({ caller }) func updateProduct(id : Text, name : Text, description : Text, price : Nat, quantity : Nat, available : Bool, image : ?Storage.ExternalBlob) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can update products");
-    };
     switch (products.get(id)) {
       case (null) { Runtime.trap("Product does not exist") };
       case (?_) {
@@ -230,9 +221,6 @@ actor {
   };
 
   public shared ({ caller }) func deleteProduct(id : Text) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can delete products");
-    };
     ignore products.remove(id);
   };
 
@@ -247,17 +235,11 @@ actor {
   };
 
   public query ({ caller }) func getAllOffers() : async [Offer] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can view all offers");
-    };
     offers.values().toArray().sort();
   };
 
   // Offer Management - Admin Functions
   public shared ({ caller }) func createOffer(title : Text, description : Text, banner : ?Storage.ExternalBlob, startDate : Time.Time, endDate : Time.Time, isActive : Bool) : async Text {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can create offers");
-    };
     let id = "offer" # offerCounter.toText();
     let newOffer : Offer = {
       id;
@@ -274,9 +256,6 @@ actor {
   };
 
   public shared ({ caller }) func updateOffer(id : Text, title : Text, description : Text, banner : ?Storage.ExternalBlob, startDate : Time.Time, endDate : Time.Time, isActive : Bool) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can update offers");
-    };
     switch (offers.get(id)) {
       case (null) { Runtime.trap("Offer does not exist") };
       case (?_) {
@@ -295,9 +274,6 @@ actor {
   };
 
   public shared ({ caller }) func activateOffer(id : Text) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can activate offers");
-    };
     switch (offers.get(id)) {
       case (null) { Runtime.trap("Offer does not exist") };
       case (?offer) {
@@ -316,9 +292,6 @@ actor {
   };
 
   public shared ({ caller }) func deactivateOffer(id : Text) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can deactivate offers");
-    };
     switch (offers.get(id)) {
       case (null) { Runtime.trap("Offer does not exist") };
       case (?offer) {
@@ -337,9 +310,6 @@ actor {
   };
 
   public shared ({ caller }) func deleteOffer(id : Text) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can delete offers");
-    };
     ignore offers.remove(id);
   };
 
@@ -349,8 +319,6 @@ actor {
     if (orderProducts.size() == 0) {
       Runtime.trap("Cannot place order with no products");
     };
-    
-    // Validate that all products exist and have sufficient quantity
     for (product in orderProducts.vals()) {
       switch (products.get(product.id)) {
         case (null) { Runtime.trap("Product " # product.id # " does not exist") };
@@ -364,7 +332,6 @@ actor {
         };
       };
     };
-    
     let newOrder : Order = {
       id = orderCounter.toText();
       customer;

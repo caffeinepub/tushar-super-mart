@@ -4,8 +4,9 @@ import type { Product, Offer, Order, Customer, DeliveryDetails, OrderStatus, Use
 import { ExternalBlob } from '../backend';
 
 // Admin permission check
-export function useIsCallerAdmin() {
+export function useIsCallerAdmin(options?: { enabled?: boolean }) {
   const { actor, isFetching } = useActor();
+  const enabled = options?.enabled !== undefined ? options.enabled : true;
 
   return useQuery<boolean>({
     queryKey: ['isAdmin'],
@@ -18,7 +19,7 @@ export function useIsCallerAdmin() {
         return false;
       }
     },
-    enabled: !!actor && !isFetching,
+    enabled: !!actor && !isFetching && enabled,
     retry: false,
   });
 }

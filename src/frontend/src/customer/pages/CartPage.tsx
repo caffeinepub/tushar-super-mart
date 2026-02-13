@@ -1,33 +1,38 @@
 import { useNavigate } from '@tanstack/react-router';
+import { useCart } from '../cart/CartContext';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
-import { useCart } from '../cart/CartContext';
 
 export default function CartPage() {
   const navigate = useNavigate();
-  const { items, updateQuantity, removeFromCart, totalItems, totalPrice } = useCart();
+  const { items, removeFromCart, updateQuantity, totalPrice, totalItems } = useCart();
+
+  const handleCheckout = () => {
+    navigate({ to: '/shop/checkout' });
+  };
 
   if (items.length === 0) {
     return (
-      <div className="max-w-2xl mx-auto text-center py-20 space-y-6">
-        <ShoppingBag className="w-24 h-24 mx-auto text-muted-foreground" />
-        <h2 className="text-3xl font-bold">Your cart is empty</h2>
-        <p className="text-lg text-muted-foreground">Add some products to get started!</p>
-        <Button size="lg" onClick={() => navigate({ to: '/shop' })}>
-          Browse Products
-        </Button>
+      <div className="container mx-auto px-4 py-16">
+        <div className="max-w-md mx-auto text-center space-y-6">
+          <div className="w-24 h-24 mx-auto bg-muted rounded-full flex items-center justify-center">
+            <ShoppingBag className="w-12 h-12 text-muted-foreground" />
+          </div>
+          <h1 className="text-3xl font-bold">Your cart is empty</h1>
+          <p className="text-muted-foreground">Add some products to get started!</p>
+          <Button onClick={() => navigate({ to: '/shop' })} size="lg">
+            Start Shopping
+          </Button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-4xl font-bold mb-2">Shopping Cart</h1>
-        <p className="text-lg text-muted-foreground">{totalItems} items in your cart</p>
-      </div>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-4xl font-bold mb-8">Shopping Cart</h1>
 
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Cart Items */}
@@ -36,28 +41,30 @@ export default function CartPage() {
             <Card key={item.id}>
               <CardContent className="p-6">
                 <div className="flex gap-4">
-                  <div className="w-24 h-24 bg-accent/20 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
-                    {item.image ? (
-                      <img
-                        src={item.image.getDirectURL()}
-                        alt={item.name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <ShoppingBag className="w-12 h-12 text-muted-foreground" />
-                    )}
-                  </div>
+                  {item.image ? (
+                    <img
+                      src={item.image.getDirectURL()}
+                      alt={item.name}
+                      className="w-24 h-24 object-cover rounded shrink-0"
+                    />
+                  ) : (
+                    <div className="w-24 h-24 bg-muted rounded shrink-0" />
+                  )}
 
-                  <div className="flex-1 space-y-2">
-                    <h3 className="font-semibold text-lg">{item.name}</h3>
-                    <p className="text-sm text-muted-foreground">{item.description}</p>
-                    <p className="text-xl font-bold text-primary">₹{Number(item.price) / 100}</p>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-lg mb-1">{item.name}</h3>
+                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                      {item.description}
+                    </p>
+                    <p className="text-lg font-bold text-primary">
+                      ₹{(Number(item.price) / 100).toFixed(2)}
+                    </p>
                   </div>
 
                   <div className="flex flex-col items-end justify-between">
                     <Button
                       variant="ghost"
-                      size="icon"
+                      size="sm"
                       onClick={() => removeFromCart(item.id)}
                       className="text-destructive hover:text-destructive"
                     >
@@ -67,17 +74,16 @@ export default function CartPage() {
                     <div className="flex items-center gap-2">
                       <Button
                         variant="outline"
-                        size="icon"
+                        size="sm"
                         onClick={() => updateQuantity(item.id, item.cartQuantity - 1)}
+                        disabled={item.cartQuantity <= 1}
                       >
                         <Minus className="w-4 h-4" />
                       </Button>
-                      <span className="text-lg font-semibold w-12 text-center">
-                        {item.cartQuantity}
-                      </span>
+                      <span className="w-12 text-center font-medium">{item.cartQuantity}</span>
                       <Button
                         variant="outline"
-                        size="icon"
+                        size="sm"
                         onClick={() => updateQuantity(item.id, item.cartQuantity + 1)}
                         disabled={item.cartQuantity >= Number(item.quantity)}
                       >
@@ -93,37 +99,44 @@ export default function CartPage() {
 
         {/* Order Summary */}
         <div className="lg:col-span-1">
-          <Card className="sticky top-24">
+          <Card className="sticky top-4">
             <CardHeader>
               <CardTitle>Order Summary</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Subtotal ({totalItems} items)</span>
-                <span className="font-semibold">₹{totalPrice / 100}</span>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Items ({totalItems})</span>
+                  <span>₹{(totalPrice / 100).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Delivery</span>
+                  <span className="text-green-600">FREE</span>
+                </div>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Delivery</span>
-                <span className="font-semibold text-primary">FREE</span>
-              </div>
+
               <Separator />
+
               <div className="flex justify-between text-lg font-bold">
                 <span>Total</span>
-                <span className="text-primary">₹{totalPrice / 100}</span>
+                <span className="text-primary">₹{(totalPrice / 100).toFixed(2)}</span>
               </div>
-            </CardContent>
-            <CardFooter>
-              <Button
-                className="w-full text-lg py-6"
-                onClick={() => navigate({ to: '/shop/checkout' })}
-              >
+
+              <Button onClick={handleCheckout} className="w-full" size="lg">
                 Proceed to Checkout
               </Button>
-            </CardFooter>
+
+              <Button
+                variant="outline"
+                onClick={() => navigate({ to: '/shop' })}
+                className="w-full"
+              >
+                Continue Shopping
+              </Button>
+            </CardContent>
           </Card>
         </div>
       </div>
     </div>
   );
 }
-

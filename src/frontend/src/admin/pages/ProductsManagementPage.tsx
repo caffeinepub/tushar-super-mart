@@ -194,7 +194,7 @@ export default function ProductsManagementPage() {
       <Card>
         <CardContent className="pt-6">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
               placeholder="Search products by name or description..."
               value={searchTerm}
@@ -486,7 +486,6 @@ export default function ProductsManagementPage() {
             <AlertDialogAction
               onClick={handleDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              disabled={deleteProduct.isPending}
             >
               {deleteProduct.isPending ? (
                 <>

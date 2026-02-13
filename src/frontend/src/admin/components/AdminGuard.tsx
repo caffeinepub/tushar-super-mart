@@ -5,19 +5,27 @@ import { useIsCallerAdmin } from '../../hooks/useQueries';
 import { Loader2, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { isAdminNoAuthEnabled } from '../adminNoAuth';
 
 export default function AdminGuard({ children }: { children: React.ReactNode }) {
+  const noAuthMode = isAdminNoAuthEnabled();
   const { identity, isInitializing } = useInternetIdentity();
   const navigate = useNavigate();
-  const { data: isAdmin, isLoading: isCheckingAdmin, isFetched } = useIsCallerAdmin();
+  
+  // Disable admin check query when in no-auth mode
+  const { data: isAdmin, isLoading: isCheckingAdmin, isFetched } = useIsCallerAdmin({
+    enabled: !noAuthMode,
+  });
 
   useEffect(() => {
+    if (noAuthMode) return;
     if (!isInitializing && !identity) {
       navigate({ to: '/admin/login', replace: true });
     }
-  }, [identity, isInitializing, navigate]);
+  }, [identity, isInitializing, navigate, noAuthMode]);
 
   useEffect(() => {
+    if (noAuthMode) return;
     // If authenticated but not admin, redirect to shop after showing message
     if (identity && isFetched && isAdmin === false) {
       const timer = setTimeout(() => {
@@ -25,7 +33,12 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [identity, isAdmin, isFetched, navigate]);
+  }, [identity, isAdmin, isFetched, navigate, noAuthMode]);
+
+  // In no-auth mode, bypass all checks and render children immediately
+  if (noAuthMode) {
+    return <>{children}</>;
+  }
 
   // Loading state while checking identity or admin status
   if (isInitializing || (identity && isCheckingAdmin)) {
